@@ -1,64 +1,84 @@
-import React, { useState } from 'react';
+import { Box, Button, Container, Typography, Divider } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../hooks/useAuth';
 import authService from '../services/authService';
 
-const HomePage = () => {
-  const navigate = useNavigate();
+function HomePage() {
   const { login } = useAuth();
-  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      const { token, user } = await authService.loginWithGoogle(credentialResponse.credential);
-      login(user, token);
-      navigate('/dashboard');
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Google login failed. Please try again.';
-      setError(errorMessage);
-      console.error("Google Login Error:", errorMessage, err);
-    }
+  const handleGoogleLoginSuccess = async (tokenResponse) => {
+    const { user, token } = await authService.googleLogin(tokenResponse.access_token);
+    login(user, token);
+    navigate('/dashboard');
   };
 
-  const handleGoogleError = () => {
-    const errorMessage = 'Google login process failed. Please try again.';
-    setError(errorMessage);
-    console.error(errorMessage);
-  };
+  const triggerGoogleLogin = useGoogleLogin({
+    onSuccess: handleGoogleLoginSuccess,
+    onError: (error) => console.error('Google Login Failed:', error),
+  });
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-gray-100">
-      {/* Background Image */ }
-      <div
-        className="absolute inset-0 z-0 bg-cover bg-center"
-        style={ { backgroundImage: "url('https://source.unsplash.com/random/1600x900?technology,abstract')" } }
+    <Container component="main" maxWidth="sm" sx={ { mt: 8, mb: 4 } }>
+      <Box
+        sx={ {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+        } }
       >
-        <div className="absolute inset-0 bg-black opacity-50"></div>
-      </div>
+        <Typography component="h1" variant="h2" gutterBottom>
+          Welcome to Our Site
+        </Typography>
+        <Typography variant="h5" color="text.secondary" paragraph>
+          Join us to get started. You can log in if you already have an account,
+          or register for a new one.
+        </Typography>
+        <Box
+          sx={ {
+            mt: 4,
+            width: '100%',
+            maxWidth: 360, // Set a max-width for better appearance on larger screens
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1.5,
+          } }
+        >
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            onClick={ () => triggerGoogleLogin() }
+          >
+            Sign in with Google
+          </Button>
 
-      <div className="relative z-10 p-10 space-y-6 text-center bg-white bg-opacity-75 rounded-lg shadow-xl backdrop-blur-sm max-w-md">
-        <h1 className="text-4xl font-bold text-gray-800">Welcome to AuthSite</h1>
-        <p className="text-lg text-gray-600">Your secure authentication solution.</p>
+          <Divider>OR</Divider>
 
-        { error && <p className="py-2 text-sm font-medium text-white bg-red-500 rounded-md">{ error }</p> }
-
-        <div className="flex flex-col items-center w-full max-w-xs gap-4 mx-auto">
-          <GoogleLogin onSuccess={ handleGoogleSuccess } onError={ handleGoogleError } theme="filled_blue" shape="rectangular" width="320px" />
-
-          <div className="w-full text-center text-gray-600">or</div>
-
-          <Link to="/login" className="w-full px-4 py-2 font-semibold text-center text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+          <Button
+            component={ Link }
+            to="/login"
+            variant="contained"
+            size="large"
+            fullWidth
+          >
             Login with Email
-          </Link>
-
-          <Link to="/register" className="w-full px-4 py-2 font-semibold text-center text-gray-700 bg-gray-200 rounded-md shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">
-            Sign Up with Email
-          </Link>
-        </div>
-      </div>
-    </div>
+          </Button>
+          <Button
+            component={ Link }
+            to="/register"
+            variant="outlined"
+            size="large"
+            fullWidth
+          >
+            Register
+          </Button>
+        </Box>
+      </Box>
+    </Container>
   );
-};
+}
 
 export default HomePage;

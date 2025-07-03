@@ -1,127 +1,146 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom';
+import { Container, Box, Typography, TextField, Button, Divider, Grid, Link } from '@mui/material';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../hooks/useAuth';
 import authService from '../services/authService';
-import { GoogleLogin } from '@react-oauth/google';
-import Input from '../components/Input';
 
-const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+  const validate = () => {
+    const newErrors = {};
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email address is invalid';
+    }
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
+    return newErrors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const { token, user } = await authService.login(formData);
-      login(user, token);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
-    } finally {
-      setLoading(false);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      try {
+        setErrors({});
+        const { user, token } = await authService.loginWithEmail(email, password);
+        login(user, token);
+        navigate(from, { replace: true });
+      } catch (error) {
+        console.error('Email/Password login failed:', error);
+        setErrors({ form: 'Invalid credentials. Please try again.' }); // Example of a form-level error
+      }
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
-    setError('');
+  const handleGoogleLoginSuccess = async (tokenResponse) => {
     try {
-      const { token, user } = await authService.loginWithGoogle(credentialResponse.credential);
+      const { user, token } = await authService.googleLogin(tokenResponse.access_token);
       login(user, token);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Google login failed. Please try again.');
-    } finally {
-      setLoading(false);
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error('Google login failed:', error);
+      // Optionally, set an error state to show a message to the user
     }
   };
+
+  const handleGoogleLoginError = (error) => {
+    console.error('Google Login Failed:', error);
+  };
+
+  const triggerGoogleLogin = useGoogleLogin({
+    onSuccess: handleGoogleLoginSuccess,
+    onError: handleGoogleLoginError,
+  });
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Login to your account</h2>
-        <form className="space-y-6" onSubmit={ handleSubmit }>
-          <Input
-            id="email"
-            name="email"
-            label="Email address"
-            type="email"
-            autoComplete="email"
-            value={ formData.email }
-            onChange={ handleChange }
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={ {
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        } }
+      >
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
+        <Box component="form" onSubmit={ handleSubmit } noValidate sx={ { mt: 1 } }>
+          <TextField
+            margin="normal"
             required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            value={ email }
+            onChange={ (e) => setEmail(e.target.value) }
+            error={ !!errors.email }
+            helperText={ errors.email }
+            autoComplete="email"
+            autoFocus
           />
-          <Input
-            id="password"
+          <TextField
+            margin="normal"
+            required
+            fullWidth
             name="password"
             label="Password"
             type="password"
+            id="password"
+            value={ password }
+            onChange={ (e) => setPassword(e.target.value) }
+            error={ !!errors.password }
+            helperText={ errors.password }
             autoComplete="current-password"
-            value={ formData.password }
-            onChange={ handleChange }
-            required
           />
-
-          <div className="flex items-center justify-end">
-            <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                Forgot your password?
+          { errors.form && (
+            <Typography color="error" variant="body2" sx={ { mt: 1 } }>{ errors.form }</Typography>
+          ) }
+          <Button type="submit" fullWidth variant="contained" sx={ { mt: 3, mb: 2 } }>
+            Sign In
+          </Button>
+          <Divider sx={ { my: 2 } }>OR</Divider>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={ () => triggerGoogleLogin() }
+            sx={ { mb: 2 } }
+          >
+            Sign in with Google
+          </Button>
+          <Grid container justifyContent="center">
+            <Grid item>
+              <Link component={ RouterLink } to="/register" variant="body2">
+                Don't have an account? Sign Up
               </Link>
-            </div>
-          </div>
-
-          { error && <p className="text-sm text-red-600">{ error }</p> }
-
-          <div>
-            <button
-              type="submit"
-              disabled={ loading }
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              { loading ? 'Signing in...' : 'Sign in' }
-            </button>
-          </div>
-        </form>
-
-        <div className="relative flex items-center justify-center my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 text-gray-500 bg-white">Or continue with</span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center">
-          <GoogleLogin
-            onSuccess={ handleGoogleSuccess }
-            onError={ () => {
-              setError('Google login failed. Please try again.');
-            } }
-            useOneTap
-            theme="filled_blue"
-            shape="rectangular"
-          />
-        </div>
-
-        <p className="text-sm text-center text-gray-600">
-          Not a member?{ ' ' }
-          <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-            Register now
-          </Link>
-        </p>
-      </div>
-    </div>
+            </Grid>
+          </Grid>
+        </Box>
+      </Box>
+    </Container>
   );
-};
+}
 
 export default LoginPage;

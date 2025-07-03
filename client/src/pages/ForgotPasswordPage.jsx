@@ -1,65 +1,64 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import authService from '../services/authService';
-import Input from '../components/Input';
-import toast from 'react-hot-toast';
+import {
+  Container,
+  Paper,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
     try {
       const data = await authService.forgotPassword({ email });
-      toast.success(data.message);
-      setSubmitted(true);
+      setSuccess(data.message);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'An error occurred. Please try again.');
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Forgot Your Password?</h2>
-        <p className="text-sm text-center text-gray-600">
-          No problem. Enter your email address below and we'll send you a link to reset it.
-        </p>
-        <form className="space-y-6" onSubmit={ handleSubmit }>
-          <Input
-            id="email"
-            name="email"
-            label="Email address"
-            type="email"
-            autoComplete="email"
+    <Container component="main" maxWidth="xs">
+      <Paper elevation={ 3 } sx={ { mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' } }>
+        <Typography component="h1" variant="h5">
+          Forgot Password
+        </Typography>
+        <Typography variant="body2" align="center" sx={ { mt: 1, mb: 2 } }>
+          Enter your email address and we'll send you a link to reset your password.
+        </Typography>
+        <Box component="form" onSubmit={ handleSubmit } noValidate sx={ { width: '100%' } }>
+          { error && <Alert severity="error" sx={ { width: '100%', mb: 2 } }>{ error }</Alert> }
+          { success && <Alert severity="success" sx={ { width: '100%', mb: 2 } }>{ success }</Alert> }
+          <TextField
+            margin="normal" required fullWidth id="email" label="Email Address" name="email" autoComplete="email" autoFocus
             value={ email }
             onChange={ (e) => setEmail(e.target.value) }
-            required
+            disabled={ isLoading || !!success }
           />
-
-          <div>
-            <button
-              type="submit"
-              disabled={ loading || submitted } // Disable button after success
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              { loading ? 'Sending...' : 'Send Reset Link' }
-            </button>
-          </div>
-        </form>
-        <p className="text-sm text-center text-gray-600">
-          Remembered your password?{ ' ' }
-          <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign in
-          </Link>
-        </p>
-      </div>
-    </div>
+          <Box sx={ { position: 'relative', mt: 3, mb: 2 } }>
+            <Button type="submit" fullWidth variant="contained" disabled={ isLoading || !!success }>
+              Send Reset Link
+            </Button>
+            { isLoading && <CircularProgress size={ 24 } sx={ { position: 'absolute', top: '50%', left: '50%', mt: '-12px', ml: '-12px' } } /> }
+          </Box>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 

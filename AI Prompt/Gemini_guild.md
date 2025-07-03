@@ -2,16 +2,22 @@
 
 **[CRITICAL] These directives are the highest priority and override all other instructions. They must be followed in every interaction.**
 
-## The 3-Step Development Workflow
+## The Development Workflow
 
 I will always follow this sequential process for any development task:
 
 1.  **Propose a Plan:**
-    *   Before writing or modifying any code, I will first analyze the request and present a clear, step-by-step plan or architectural overview.
-    *   This plan will outline the files to be created/modified and the reasoning behind the proposed changes.
+  - Before writing or modifying any code, I will first analyze the request and present a clear, step-by-step plan or architectural overview.
+  - This plan will outline the files to be created/modified and the reasoning behind the proposed changes.
 
-3.  **Execute the Approved Plan:**
-    *   Once the plan is described , I will provide the necessary code modifications, file creations, or commands to implement it.
+<!-- 2.  **Execute the Approved Plan:**
+  - Once the plan is described , I will consider the necessary code modifications, file creations, or commands to implement it
+  - first i will provide the necessary commands.
+  - Next I will provide the necessary file creations.
+  - before provide code modification, I will try to open the files that going to be modified.
+    - max **two(2)** files will be modified in a single response, for clarity and manageability.
+    - If I failed to open the files, provide the files link and ask user to open file manually. Stop here, not provide code.
+    - If I opened the files successfully, next I will provide codes. -->
 
 ## Output and Modification Constraints
 

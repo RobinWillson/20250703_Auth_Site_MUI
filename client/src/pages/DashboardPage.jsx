@@ -1,6 +1,15 @@
-import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import {
+  Container,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Avatar,
+  Box,
+  Stack,
+} from '@mui/material';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -8,50 +17,49 @@ const DashboardPage = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login'); // Redirect to login for a clear flow
   };
 
+  // Fallback for avatar if user has no name
+  const avatarInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-lg p-8 text-center bg-white rounded-lg shadow-md">
-        <div className="flex flex-col items-center mb-4">
-          <img
-            src={ user?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random&color=fff` }
-            alt="Profile"
-            className="object-cover w-24 h-24 mb-4 rounded-full"
-          />
-          <h1 className="text-4xl font-bold text-gray-800">Welcome, { user?.name || 'User' }!</h1>
-        </div>
-        <p className="mb-6 text-lg text-gray-600">
-          You have successfully logged in.
-        </p>
-        <p className="mb-6 text-md text-gray-500">
-          Your email: { user?.email }
-        </p>
-        <div className="flex flex-col items-center gap-4">
-          <Link
-            to="/profile"
-            className="w-full max-w-xs px-6 py-2 font-semibold text-white bg-gray-600 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-          >
-            Edit Profile
-          </Link>
-          { user?.role === 'admin' && (
-            <Link
-              to="/admin"
-              className="w-full max-w-xs px-6 py-2 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
+    <Container maxWidth="sm">
+      <Card sx={ { mt: 5 } }>
+        <CardContent>
+          <Box sx={ { display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' } }>
+            <Avatar
+              src={ user?.photo }
+              sx={ { width: 100, height: 100, mb: 2, bgcolor: 'primary.main', fontSize: '3rem' } }
             >
-              Go to Admin Panel
-            </Link>
-          ) }
-          <button
-            onClick={ handleLogout }
-            className="w-full max-w-xs px-6 py-2 font-semibold text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </div>
+              { avatarInitial }
+            </Avatar>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Welcome, { user?.name || 'User' }!
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={ { mb: 1 } }>
+              You have successfully logged in.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={ { mb: 4 } }>
+              { user?.email }
+            </Typography>
+            <Stack spacing={ 2 } sx={ { width: '100%', maxWidth: '300px' } }>
+              <Button component={ RouterLink } to="/profile" variant="contained" color="primary">
+                Edit Profile
+              </Button>
+              { user?.isAdmin && (
+                <Button component={ RouterLink } to="/admin" variant="contained" color="secondary">
+                  Admin Panel
+                </Button>
+              ) }
+              <Button onClick={ handleLogout } variant="outlined" color="error">
+                Logout
+              </Button>
+            </Stack>
+          </Box>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 

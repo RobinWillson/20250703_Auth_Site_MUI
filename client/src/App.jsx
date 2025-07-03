@@ -1,56 +1,38 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from './pages/HomePage';
+import { Box } from '@mui/material';
+import { Routes, Route, Outlet } from 'react-router-dom';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import MainContent from './components/MainContent';
 import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import AdminRoute from './components/AdminRoute';
-import { useAuth } from './hooks/useAuth';
-import AdminPage from './pages/AdminPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import ProfilePage from './pages/ProfilePage';
+
+// Layout for pages that should have a Header and Footer
+const AppLayout = () => (
+  <Box sx={ { display: 'flex', flexDirection: 'column', minHeight: '100vh' } }>
+    <Header />
+    {/* The Outlet component renders the matched child route's element */ }
+    <Outlet />
+    <Footer />
+  </Box>
+);
 
 function App() {
-  const { isAuthenticated } = useAuth();
-
   return (
     <Routes>
-      <Route path="/" element={ isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage /> } />
-      <Route
-        path="/login"
-        element={ isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage /> }
-      />
-      <Route
-        path="/register"
-        element={ isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage /> }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <AdminPage />
-          </AdminRoute>
-        }
-      />
-      <Route path="/forgot-password" element={ <ForgotPasswordPage /> } />
-      <Route path="/reset-password/:resetToken" element={ <ResetPasswordPage /> } />
+      {/* Public routes that render without the main layout */ }
+      <Route path="/" element={ <HomePage /> } />
+      <Route path="/login" element={ <LoginPage /> } />
+      <Route path="/register" element={ <RegisterPage /> } />
+
+      {/* Protected routes are nested inside the ProtectedRoute component */ }
+      <Route element={ <ProtectedRoute /> }>
+        {/* Routes inside here are protected and will also use the AppLayout */ }
+        <Route element={ <AppLayout /> }>
+          <Route path="/dashboard" element={ <MainContent /> } />
+        </Route>
+      </Route>
     </Routes>
   );
 }

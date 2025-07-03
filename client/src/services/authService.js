@@ -1,98 +1,73 @@
-import axios from 'axios';
 
-// The base URL will be proxied by the Vite development server.
-const API_URL = '/api';
+// This is a MOCK service. In a real app, this would make API calls to your backend.
+
+const FAKE_USER_DATA = {
+  id: '123',
+  name: 'John Doe',
+  email: 'john.doe@example.com',
+};
+
+const FAKE_APP_TOKEN = 'fake-jwt-token-for-app-session';
 
 /**
- * Fetches the current user's data using the provided token.
- * @param {string} token - The JWT token for authentication.
- * @returns {Promise<object>} The user data.
+ * Exchanges a Google access token for your application's own session token (JWT).
+ * @param {string} googleAccessToken - The access token received from Google Sign-In.
+ * @returns {Promise<{user: object, token: string}>} - A promise that resolves with user data and an app token.
+ */
+const googleLogin = async (googleAccessToken) => {
+  console.log('Sending Google Access Token to backend:', googleAccessToken);
+  // In a real app, you would POST this to your backend:
+  // const response = await axios.post('/api/auth/google', { token: googleAccessToken });
+  // return response.data;
+
+  // For now, we'll just simulate a successful response.
+  return Promise.resolve({ user: FAKE_USER_DATA, token: FAKE_APP_TOKEN });
+};
+
+/**
+ * Logs in a user with email and password.
+ * @param {string} email - The user's email.
+ * @param {string} password - The user's password.
+ * @returns {Promise<{user: object, token: string}>} - A promise that resolves with user data and an app token.
+ */
+const loginWithEmail = async (email, password) => {
+  console.log('Attempting to log in with email:', email);
+  console.log(password);
+  // In a real app, you would POST this to your backend:
+  // const response = await axios.post('/api/auth/login', { email, password });
+  // return response.data;
+
+  // For now, we'll just simulate a successful response.
+  return Promise.resolve({ user: { ...FAKE_USER_DATA, email }, token: FAKE_APP_TOKEN });
+};
+
+/**
+ * Registers a new user with email and password.
+ * @param {string} name - The user's name.
+ * @param {string} email - The user's email.
+ * @param {string} password - The user's password.
+ * @returns {Promise<{user: object, token: string}>} - A promise that resolves with user data and an app token.
+ */
+const registerWithEmail = async (name, email, password) => {
+  console.log('Attempting to register with:', { name, email });
+  console.log(password);
+  // In a real app, you would POST this to your backend:
+  // const response = await axios.post('/api/auth/register', { name, email, password });
+  // return response.data;
+
+  // For now, we'll just simulate a successful response.
+  return Promise.resolve({ user: { ...FAKE_USER_DATA, name, email }, token: FAKE_APP_TOKEN });
+};
+
+/**
+ * Fetches the current user's data using the app's session token.
+ * @param {string} token - The application's session token (JWT).
+ * @returns {Promise<object>} - A promise that resolves with the user's data.
  */
 const getMe = async (token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  const response = await axios.get(`${API_URL}/users/me`, config);
-  return response.data;
+  console.log('Verifying app token with backend:', token);
+  // Simulate fetching user data with the token
+  return Promise.resolve(FAKE_USER_DATA);
 };
 
-/**
- * Logs in a user.
- * @param {object} credentials - The user's credentials {email, password}.
- * @returns {Promise<object>} An object containing the token and user data.
- */
-const login = async (credentials) => {
-  const response = await axios.post(`${API_URL}/auth/login`, credentials);
-  return response.data;
-};
-
-/**
- * Registers a new user.
- * @param {object} userData - The new user's data {name, email, password}.
- * @returns {Promise<object>} An object containing the token and user data.
- */
-const register = async (userData) => {
-  const response = await axios.post(`${API_URL}/auth/register`, userData);
-  return response.data;
-};
-
-/**
- * Logs in or registers a user using a Google credential.
- * @param {string} credential - The credential string from Google's response.
- * @returns {Promise<object>} An object containing the token and user data.
- */
-const loginWithGoogle = async (credential) => {
-  const response = await axios.post(`${API_URL}/auth/google`, { credential });
-  return response.data;
-};
-
-/**
- * Sends a password reset request for the given email.
- * @param {{email: string}} emailData - The user's email.
- * @returns {Promise<object>} A confirmation message.
- */
-const forgotPassword = async (emailData) => {
-  const response = await axios.post(`${API_URL}/auth/forgot-password`, emailData);
-  return response.data;
-};
-
-/**
- * Resets the user's password using a reset token.
- * @param {string} resetToken - The password reset token from the URL.
- * @param {{password: string}} passwordData - The new password.
- * @returns {Promise<object>} A confirmation message.
- */
-const resetPassword = async (resetToken, passwordData) => {
-  const response = await axios.put(`${API_URL}/auth/reset-password/${resetToken}`, passwordData);
-  return response.data;
-};
-
-/**
- * Changes the user's password.
- * @param {object} passwordData - The password data { currentPassword, newPassword }.
- * @param {string} token - The JWT token for authentication.
- * @returns {Promise<object>} A confirmation message.
- */
-const changePassword = async (passwordData, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  const response = await axios.put(`${API_URL}/auth/change-password`, passwordData, config);
-  return response.data;
-};
-
-const authService = {
-  getMe,
-  login,
-  register,
-  loginWithGoogle,
-  forgotPassword,
-  resetPassword,
-  changePassword,
-};
-
-export default authService;
+export default { googleLogin, loginWithEmail, registerWithEmail, getMe };

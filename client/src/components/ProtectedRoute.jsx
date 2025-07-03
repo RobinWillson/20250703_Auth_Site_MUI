@@ -1,23 +1,22 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+/**
+ * A component that checks if a user is authenticated before rendering a route.
+ * If the user is not authenticated, it redirects them to the login page.
+ */
+function ProtectedRoute() {
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (loading) {
-    // You can return a loading spinner here for a better UX
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
   if (!isAuthenticated) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to. This allows us to send them along to that page after they login.
+    // Redirect to the login page, but save the current location the user was
+    // trying to go to. This allows us to redirect them back after login.
     return <Navigate to="/login" state={ { from: location } } replace />;
   }
 
-  return children;
-};
+  // If authenticated, render the child route element via the Outlet.
+  return <Outlet />;
+}
 
 export default ProtectedRoute;
